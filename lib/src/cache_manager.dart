@@ -165,13 +165,13 @@ abstract class BaseCacheManager {
     }
     var file = await new File(path).writeAsBytes(fileBytes);
 
-    store.putFile(cacheObject);
+    await store.putFile(cacheObject);
 
     return file;
   }
 
   /// Remove a file from the cache
-  removeFile(String url) async {
+  Future<void> removeFile(String url) async {
     var cacheObject = await store.retrieveCacheData(url);
     if (cacheObject != null) {
       await store.removeCachedFile(cacheObject);
@@ -179,7 +179,7 @@ abstract class BaseCacheManager {
   }
 
   /// Removes all files from the cache
-  emptyCache() async {
+  Future<void> emptyCache() async {
     await store.emptyCache();
   }
 }

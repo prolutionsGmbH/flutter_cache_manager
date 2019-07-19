@@ -58,7 +58,7 @@ class CacheStore {
         File(path), FileSource.Cache, cacheObject.validTill, url);
   }
 
-  putFile(CacheObject cacheObject) async {
+  Future<void> putFile(CacheObject cacheObject) async {
     _memCache[cacheObject.url] = cacheObject;
     _updateCacheDataInDatabase(cacheObject);
   }
@@ -134,36 +134,28 @@ class CacheStore {
     var oldObjects = await provider.getOldObjects(_maxAge);
 
     var toRemove = List<int>();
-    overCapacity.forEach((cacheObject) async {
-      _removeCachedFile(cacheObject, toRemove);
-    });
-    oldObjects.forEach((cacheObject) async {
-      _removeCachedFile(cacheObject, toRemove);
-    });
-
+    await Future.forEach(overCapacity, (cacheObject) => _removeCachedFile(cacheObject, toRemove));
+    await Future.forEach(oldObjects, (cacheObject) => _removeCachedFile(cacheObject, toRemove));
     await provider.deleteAll(toRemove);
   }
 
-  emptyCache() async {
+  Future<void> emptyCache() async {
     var provider = await _cacheObjectProvider;
     var toRemove = List<int>();
 
     var allObjects = await provider.getAllObjects();
-    allObjects.forEach((cacheObject) async {
-      _removeCachedFile(cacheObject, toRemove);
-    });
-
+    await Future.forEach(allObjects, (cacheObject) => _removeCachedFile(cacheObject, toRemove));
     await provider.deleteAll(toRemove);
   }
 
-  removeCachedFile(CacheObject cacheObject) async {
+  Future<void> removeCachedFile(CacheObject cacheObject) async {
     var provider = await _cacheObjectProvider;
     var toRemove = List<int>();
     _removeCachedFile(cacheObject, toRemove);
     await provider.deleteAll(toRemove);
   }
 
-  _removeCachedFile(CacheObject cacheObject, List<int> toRemove) async {
+  Future<void> _removeCachedFile(CacheObject cacheObject, List<int> toRemove) async {
     if (!toRemove.contains(cacheObject.id)) {
       toRemove.add(cacheObject.id);
       if (_memCache.containsKey(cacheObject.url))
